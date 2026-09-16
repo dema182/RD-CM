@@ -1,32 +1,21 @@
 # RD-CM
 ## RetroDECK Collection Manager
 
-A Linux x86_64 desktop application for RetroDECK / ES-DE collection management.
+A Linux desktop application for managing RetroDECK / ES-DE collections.
 
-### Current build
+### Planned features
+- RetroAchievements ROM identification using RAHasher
+- Report of ROMs whose RA hashes are not found
+- ES-DE gamelist management
+- Custom RetroAchievements and Couch Coop collections
+- Automatic RetroDECK directory detection
+- Backups before modifying collections
 
-GitHub Actions builds a self-contained Linux x86_64 AppImage.
+### Build
+GitHub Actions builds a Linux x86_64 AppImage.
 
-The AppImage is intended to be distributed directly. Users do not need Python or other runtime dependencies installed.
+### RetroAchievements API key
+The application will ask each user for their own RetroAchievements API key. It is stored locally and is never embedded in the source tree or release binary.
 
-### Download
-
-Published builds are available on the GitHub **Releases** page.
-
-### Run
-
-Download `RD-CM-x86_64.AppImage`, make it executable if necessary:
-
-```bash
-chmod +x RD-CM-x86_64.AppImage
-```
-
-Then launch it.
-
-### RetroAchievements
-
-The application uses the user's own RetroAchievements API key. The key is stored locally and is never included in the repository or AppImage.
-
-### License
-
+## License
 MIT
