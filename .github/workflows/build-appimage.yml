@@ -1,0 +1,110 @@
+name: Build and Release AppImage
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag (z. B. v0.2.0)"
+        required: true
+        default: "v0.2.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-tk python3-pip python3-venv wget file fuse libfuse2
+
+      - name: Set up Python venv
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt pyinstaller pytest
+
+      - name: Run tests
+        run: |
+          export PYTHONPATH="$PWD/src"
+          .venv/bin/pytest -q
+
+      - name: Download RAHasher 1.8.3
+        run: |
+          python3 packaging/fetch-rahasher.py
+          test -x vendor/RAHasher
+
+      - name: Build with PyInstaller
+        run: |
+          python3 packaging/make-icon.py packaging/rd-cm.png
+          export PYTHONPATH="$PWD/src"
+          .venv/bin/pyinstaller \
+            --noconfirm --clean --windowed --name RD-CM \
+            --paths src \
+            --add-data "src/rdcm/data/couch_coop.json:rdcm/data" \
+            --add-binary "vendor/RAHasher:vendor" \
+            --hidden-import py7zr \
+            --hidden-import rdcm \
+            --hidden-import rdcm.gui \
+            src/retrodeck_collection_manager.py
+
+      - name: Prepare AppDir
+        run: |
+          rm -rf AppDir
+          mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/256x256/apps
+          cp dist/RD-CM AppDir/usr/bin/RD-CM
+          cp packaging/AppRun AppDir/AppRun
+          cp packaging/RD-CM.desktop AppDir/RD-CM.desktop
+          cp packaging/rd-cm.png AppDir/rd-cm.png
+          cp packaging/rd-cm.png AppDir/usr/share/icons/hicolor/256x256/apps/rd-cm.png
+          chmod +x AppDir/AppRun AppDir/usr/bin/RD-CM
+
+      - name: Download appimagetool
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+
+      - name: Build AppImage
+        run: |
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir RD-CM-x86_64.AppImage
+
+      - name: Verify AppImage
+        run: |
+          test -s RD-CM-x86_64.AppImage
+          file RD-CM-x86_64.AppImage
+          ls -lh RD-CM-x86_64.AppImage
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RD-CM-x86_64-AppImage
+          path: RD-CM-x86_64.AppImage
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: RD-CM-x86_64.AppImage
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          body: |
+            Linux-x86_64 AppImage von RetroDECK Collection Manager.
+
+            ```bash
+            chmod +x RD-CM-x86_64.AppImage
+            ./RD-CM-x86_64.AppImage
+            ```
+
+            Python oder eine Entwicklungsumgebung sind nicht erforderlich.
+            Der RetroAchievements-API-Key wird lokal gespeichert und ist nicht in diesem Binary enthalten.

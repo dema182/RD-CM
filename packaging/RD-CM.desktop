@@ -1,7 +1,10 @@
 [Desktop Entry]
 Type=Application
 Name=RetroDECK Collection Manager
-Comment=Manage RetroDECK and ES-DE collections
+Comment=RetroAchievements scan and ES-DE collections for RetroDECK
 Exec=RD-CM
+Icon=rd-cm
 Categories=Game;Utility;
 Terminal=false
+StartupNotify=true
+X-AppImage-Name=RD-CM
