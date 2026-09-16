@@ -3,6 +3,5 @@ Type=Application
 Name=RetroDECK Collection Manager
 Comment=Manage RetroDECK and ES-DE collections
 Exec=RD-CM
-Icon=rd-cm
 Categories=Game;Utility;
 Terminal=false
